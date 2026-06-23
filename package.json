@@ -1,7 +1,7 @@
 {
   "name": "plida-download",
   "version": "1.0.0",
-  "description": "Portale download certificati PLIDA",
+  "description": "Portale download certificati",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
