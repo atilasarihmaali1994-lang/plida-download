@@ -4,22 +4,247 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>PLIDA - Download Certificato</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #faf8f4;
+      color: #111;
+    }
+
+    .top {
+      background: white;
+      text-align: center;
+      padding: 30px 20px 20px;
+      border-bottom: 2px solid #8b0000;
+      position: relative;
+    }
+
+    .logo-left,
+    .logo-right {
+      position: absolute;
+      top: 35px;
+      font-size: 46px;
+      font-weight: bold;
+      color: #111;
+    }
+
+    .logo-left { left: 70px; }
+    .logo-right { right: 70px; }
+
+    .small-logo {
+      font-size: 14px;
+      margin-top: 6px;
+      color: #111;
+      font-weight: normal;
+    }
+
+    .dante {
+      font-size: 28px;
+      font-weight: bold;
+      letter-spacing: 2px;
+    }
+
+    .mondo {
+      color: #8b0000;
+      font-size: 18px;
+      margin-top: 6px;
+      letter-spacing: 2px;
+    }
+
+    .plida {
+      font-family: Georgia, serif;
+      font-size: 70px;
+      color: #8b0000;
+      margin-top: 30px;
+      font-weight: bold;
+      letter-spacing: 4px;
+    }
+
+    .subtitle {
+      font-size: 22px;
+      font-weight: bold;
+      margin-top: 5px;
+    }
+
+    .portal {
+      color: #8b0000;
+      font-size: 20px;
+      font-weight: bold;
+      margin-top: 28px;
+      letter-spacing: 1px;
+    }
+
+    .card {
+      width: min(720px, calc(100% - 30px));
+      margin: 28px auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.15);
+      padding: 34px;
+    }
+
+    .intro {
+      text-align: center;
+      font-size: 20px;
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      font-size: 17px;
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      padding: 14px;
+      font-size: 17px;
+      border: 1px solid #c9c9c9;
+      border-radius: 5px;
+      margin-bottom: 22px;
+      box-sizing: border-box;
+    }
+
+    button {
+      width: 100%;
+      background: #990000;
+      color: white;
+      border: none;
+      padding: 16px;
+      font-size: 21px;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    button:hover {
+      background: #7d0000;
+    }
+
+    #result {
+      display: none;
+      width: min(720px, calc(100% - 30px));
+      margin: 20px auto;
+      background: #f3fff3;
+      border: 1px solid #b8d8b8;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 18px;
+    }
+
+    #result.error {
+      background: #fff0f0;
+      border-color: #d8aaaa;
+      color: #8b0000;
+    }
+
+    .download {
+      display: inline-block;
+      margin-top: 15px;
+      background: #990000;
+      color: white;
+      padding: 13px 22px;
+      text-decoration: none;
+      font-weight: bold;
+      border-radius: 4px;
+    }
+
+    .security {
+      width: min(720px, calc(100% - 30px));
+      margin: 20px auto 70px;
+      background: #fffaf0;
+      border: 1px solid #d8c7a0;
+      border-radius: 8px;
+      padding: 20px;
+      font-size: 16px;
+    }
+
+    .security strong {
+      color: #8b0000;
+      font-size: 18px;
+    }
+
+    footer {
+      background: #990000;
+      color: white;
+      text-align: center;
+      padding: 16px;
+      font-size: 15px;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
+
+    @media (max-width: 700px) {
+      .logo-left,
+      .logo-right {
+        display: none;
+      }
+
+      .plida {
+        font-size: 48px;
+      }
+
+      .card {
+        padding: 24px;
+      }
+    }
+  </style>
 </head>
+
 <body>
-  <h1>Società Dante Alighieri</h1>
-  <h2>PLIDA - Download Certificato</h2>
 
-  <form id="form">
-    <label>Cognome</label><br>
-    <input type="text" name="cognome" required><br><br>
+  <header class="top">
+    <div class="logo-left">
+      cliQ
+      <div class="small-logo">TORINO<br>Certificazione Lingua Italiana</div>
+    </div>
 
-    <label>Nome</label><br>
-    <input type="text" name="nome" required><br><br>
+    <div class="logo-right">
+      cliQ
+      <div class="small-logo">TORINO<br>Certificazione Lingua Italiana</div>
+    </div>
 
-    <button type="submit">Accedi al documento</button>
-  </form>
+    <div class="dante">SOCIETÀ DANTE ALIGHIERI</div>
+    <div class="mondo">IL MONDO IN ITALIANO</div>
+
+    <div class="plida">PLIDA</div>
+    <div class="subtitle">CERTIFICATO DI COMPETENZA IN LINGUA ITALIANA</div>
+
+    <div class="portal">PORTALE DI DOWNLOAD CERTIFICATO</div>
+  </header>
+
+  <section class="card">
+    <div class="intro">
+      Inserisci i tuoi dati per accedere al tuo certificato.
+    </div>
+
+    <form id="form">
+      <label>Cognome</label>
+      <input type="text" name="cognome" placeholder="Inserisci il cognome" required>
+
+      <label>Nome</label>
+      <input type="text" name="nome" placeholder="Inserisci il nome" required>
+
+      <button type="submit">🔒 ACCEDI AL DOCUMENTO</button>
+    </form>
+  </section>
 
   <div id="result"></div>
+
+  <section class="security">
+    <strong>I tuoi dati sono al sicuro</strong><br>
+    Le informazioni inserite vengono utilizzate esclusivamente per verificare la tua identità e consentire il download del certificato.
+  </section>
+
+  <footer>
+    © Società Dante Alighieri - Tutti i diritti riservati
+  </footer>
 
   <script>
     const form = document.getElementById("form");
@@ -28,29 +253,39 @@
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
+      result.style.display = "block";
+      result.className = "";
+      result.innerHTML = "Verifica dati in corso...";
+
       const dati = Object.fromEntries(new FormData(form).entries());
 
-      const risposta = await fetch("/api/verifica", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(dati)
-      });
+      try {
+        const risposta = await fetch("/api/verifica", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(dati)
+        });
 
-      const json = await risposta.json();
+        const json = await risposta.json();
 
-      if (!json.ok) {
-        result.innerHTML = json.message || "Errore";
-        return;
+        if (!json.ok) {
+          throw new Error(json.message || "Dati non validi.");
+        }
+
+        result.innerHTML = `
+          Accesso completato.<br>
+          <a class="download" href="${json.downloadUrl}" download>
+            Scarica certificato
+          </a>
+        `;
+      } catch (err) {
+        result.className = "error";
+        result.innerHTML = err.message;
       }
-
-      result.innerHTML = `
-        <br>
-        Accesso completato.<br><br>
-        <a href="${json.downloadUrl}" download>Scarica certificato</a>
-      `;
     });
   </script>
+
 </body>
 </html>
