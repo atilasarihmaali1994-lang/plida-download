@@ -8,9 +8,9 @@ app.use(express.static("public"));
 
 const utenti = [
   {
-    cognome: "ECH-CHRIFI EL MILOUDI",
-    nome: "MILOUDI",
-    file: "/files/ech-chrifi-el-miloudi.pdf"
+    cognome: "LOUBAOUI",
+    nome: "FATIMA",
+    file: "/files/loubaoui-fatima.pdf"
   },
   {
     cognome: "MIRINIOUI",
@@ -21,6 +21,11 @@ const utenti = [
     cognome: "CHOKRI",
     nome: "AMAL",
     file: "/files/chokri-amal.pdf"
+  },
+  {
+    cognome: "ECH-CHRIFI",
+    nome: "EL MILOUDI",
+    file: "/files/ech-chrifi-el-miloudi.pdf"
   }
 ];
 
@@ -34,12 +39,14 @@ function pulisci(testo) {
 }
 
 app.post("/api/verifica", (req, res) => {
+
   const cognome = pulisci(req.body.cognome || "");
   const nome = pulisci(req.body.nome || "");
 
-  const utente = utenti.find(u =>
-    pulisci(u.cognome) === cognome &&
-    pulisci(u.nome) === nome
+  const utente = utenti.find(
+    u =>
+      pulisci(u.cognome) === cognome &&
+      pulisci(u.nome) === nome
   );
 
   if (!utente) {
@@ -53,6 +60,7 @@ app.post("/api/verifica", (req, res) => {
     ok: true,
     downloadUrl: utente.file
   });
+
 });
 
 app.listen(PORT, () => {
