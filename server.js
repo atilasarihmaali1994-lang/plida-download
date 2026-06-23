@@ -8,28 +8,44 @@ app.use(express.static("public"));
 
 const utenti = [
   {
-    matricola: "984572",
-    file: "/files/loubaqui-fatima.pdf"
+    cognome: "ECH-CHRIFI EL MILOUDI",
+    nome: "MILOUDI",
+    file: "/files/ech-chrifi-el-miloudi.pdf"
+  },
+  {
+    cognome: "MIRINIOUI",
+    nome: "FATIMA",
+    file: "/files/mirinioui-fatima.pdf"
+  },
+  {
+    cognome: "CHOKRI",
+    nome: "AMAL",
+    file: "/files/chokri-amal.pdf"
   }
 ];
 
+function pulisci(testo) {
+  return testo
+    .toString()
+    .trim()
+    .toUpperCase()
+    .replace(/-/g, " ")
+    .replace(/\s+/g, " ");
+}
+
 app.post("/api/verifica", (req, res) => {
-  const matricola = (req.body.matricola || "").trim();
-  const captcha = (req.body.captcha || "").trim();
+  const cognome = pulisci(req.body.cognome || "");
+  const nome = pulisci(req.body.nome || "");
 
-  if (captcha !== "7") {
-    return res.status(401).json({
-      ok: false,
-      message: "Calcolo non corretto."
-    });
-  }
-
-  const utente = utenti.find(u => u.matricola === matricola);
+  const utente = utenti.find(u =>
+    pulisci(u.cognome) === cognome &&
+    pulisci(u.nome) === nome
+  );
 
   if (!utente) {
     return res.status(401).json({
       ok: false,
-      message: "Matricola non valida."
+      message: "Dati non validi."
     });
   }
 
