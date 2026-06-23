@@ -1,251 +1,56 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
-
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>PLIDA - Download Certificato</title>
-
-<style>
-
-body{
-    margin:0;
-    background:#f5f5f5;
-    font-family:Arial,Helvetica,sans-serif;
-}
-
-.header{
-    background:#ffffff;
-    border-bottom:1px solid #d9d9d9;
-    padding:30px 0;
-}
-
-.container{
-    width:900px;
-    max-width:95%;
-    margin:auto;
-}
-
-.title{
-    text-align:center;
-    font-size:22px;
-    font-weight:bold;
-    color:#000;
-}
-
-.subtitle{
-    text-align:center;
-    font-size:50px;
-    font-weight:bold;
-    margin-top:10px;
-}
-
-.desc{
-    text-align:center;
-    margin-top:10px;
-    font-size:16px;
-}
-
-.box{
-    background:white;
-    border:1px solid #d4d4d4;
-    margin-top:30px;
-}
-
-.box-header{
-    background:#003b79;
-    color:white;
-    padding:15px;
-    font-size:18px;
-    font-weight:bold;
-}
-
-.box-body{
-    padding:30px;
-}
-
-.row{
-    margin-bottom:20px;
-}
-
-label{
-    display:block;
-    font-weight:bold;
-    margin-bottom:5px;
-}
-
-input{
-    width:100%;
-    max-width:400px;
-    padding:12px;
-    font-size:16px;
-    border:1px solid #ccc;
-}
-
-button{
-    background:#003b79;
-    color:white;
-    border:none;
-    padding:12px 25px;
-    cursor:pointer;
-    font-size:16px;
-    font-weight:bold;
-}
-
-button:hover{
-    background:#0055aa;
-}
-
-#result{
-    display:none;
-    margin-top:20px;
-    padding:20px;
-    background:#edf8ee;
-    border:1px solid #c2e1c5;
-}
-
-.download{
-    display:inline-block;
-    margin-top:15px;
-    background:#003b79;
-    color:white;
-    text-decoration:none;
-    padding:12px 20px;
-    font-weight:bold;
-}
-
-.error{
-    background:#fff0f0 !important;
-    border-color:#d9aaaa !important;
-}
-
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PLIDA - Download Certificato</title>
 </head>
-
 <body>
+  <h1>Società Dante Alighieri</h1>
+  <h2>PLIDA - Download Certificato</h2>
 
-<div class="header">
-<div class="container">
+  <form id="form">
+    <label>Cognome</label><br>
+    <input type="text" name="cognome" required><br><br>
 
-<div class="title">
-Società Dante Alighieri
-</div>
+    <label>Nome</label><br>
+    <input type="text" name="nome" required><br><br>
 
-<div class="subtitle">
-PLIDA
-</div>
+    <button type="submit">Accedi al documento</button>
+  </form>
 
-<div class="desc">
-Certificazione di Competenza in Lingua Italiana
-</div>
+  <div id="result"></div>
 
-</div>
-</div>
+  <script>
+    const form = document.getElementById("form");
+    const result = document.getElementById("result");
 
-<div class="container">
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-<div class="box">
+      const dati = Object.fromEntries(new FormData(form).entries());
 
-<div class="box-header">
-Accesso al certificato
-</div>
+      const risposta = await fetch("/api/verifica", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(dati)
+      });
 
-<div class="box-body">
+      const json = await risposta.json();
 
-<form id="form">
+      if (!json.ok) {
+        result.innerHTML = json.message || "Errore";
+        return;
+      }
 
-<div class="row">
-<label>Matricola</label>
-<input
-type="text"
-name="matricola"
-required>
-</div>
-
-<div class="row">
-<label>Calcolo veloce: 4 + 3 =</label>
-<input
-type="text"
-name="captcha"
-required>
-</div>
-
-<button type="submit">
-Visualizza certificato
-</button>
-
-</form>
-
-<div id="result"></div>
-
-</div>
-</div>
-
-</div>
-
-<script>
-
-const form=document.getElementById("form");
-const result=document.getElementById("result");
-
-form.addEventListener("submit",async(e)=>{
-
-e.preventDefault();
-
-const dati=Object.fromEntries(
-new FormData(form).entries()
-);
-
-try{
-
-const risposta=await fetch("/api/verifica",{
-
-method:"POST",
-
-headers:{
-"Content-Type":"application/json"
-},
-
-body:JSON.stringify(dati)
-
-});
-
-const json=await risposta.json();
-
-if(!json.ok){
-throw new Error(json.message);
-}
-
-result.style.display="block";
-result.className="";
-
-result.innerHTML=`
-Accesso completato.<br><br>
-
-<a
-class="download"
-href="${json.downloadUrl}"
-download>
-
-Scarica certificato
-
-</a>
-`;
-
-}
-catch(err){
-
-result.style.display="block";
-result.className="error";
-
-result.innerHTML=err.message;
-
-}
-
-});
-
-</script>
-
+      result.innerHTML = `
+        <br>
+        Accesso completato.<br><br>
+        <a href="${json.downloadUrl}" download>Scarica certificato</a>
+      `;
+    });
+  </script>
 </body>
 </html>
