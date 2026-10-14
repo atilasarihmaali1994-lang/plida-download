@@ -7,24 +7,24 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static("public"));
 
-// Lista degli utenti autorizzati
+// Lista degli utenti autorizzati (con i percorsi corretti basati sulla cartella public)
 const utenti = [
   {
     cognome: "METWALY",
     nome: "MOHAMED SHENDY MAHMOUD MOHAMED",
-    file: "/files/Mohamed%20.pdf"
+    file: "/Mohamed%20.pdf"
   },
   {
     cognome: "FEHIL",
     nome: "SAMAR KHAMIS RAMADAN KHAMIS",
-    file: "/files/Samar.pdf"
+    file: "/Samar.pdf"
   },
   {
     cognome: "FEHIL",
     nome: "AHMED KHAMIS RAMADAN MOUSA KHAMIS",
-    file: "/files/Ahmed.pdf"
+    file: "/Ahmed.pdf"
   }
-]; // <-- CORRETTO: Chiusura dell'array aggiunta qui
+]; // <-- Array chiuso correttamente
 
 // Funzione di utilità per pulire e normalizzare le stringhe
 function pulisci(testo) {
@@ -60,10 +60,10 @@ app.post("/api/verifica", (req, res) => {
     });
   } catch (error) {
     console.error("Errore durante la verifica:", error);
-    return res.status(500, json({
+    return res.status(500).json({
       ok: false,
       message: "Errore interno del server."
-    }));
+    });
   }
 });
 
