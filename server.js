@@ -8,26 +8,20 @@ app.use(express.static("public"));
 
 const utenti = [
   {
-    cognome: "LOUBAOUI",
-    nome: "FATIMA",
-    file: "/files/loubaoui-fatima.pdf"
-  },
-  {
-    cognome: "MIRINIOUI",
-    nome: "FATIMA",
-    file: "/files/mirinioui-fatima.pdf"
-  },
-  {
-    cognome: "CHOKRI",
-    nome: "AMAL",
-    file: "/files/chokri-amal.pdf"
-  },
-  {
-    cognome: "ECH-CHRIFI",
-    nome: "EL MILOUDI",
-    file: "/files/ech-chrifi-el-miloudi.pdf"
-  }
-];
+  cognome: "METWALY",
+  nome: "MOHAMED SHENDY MAHMOUD MOHAMED",
+  file: "/files/Mohamed%20.pdf"
+},
+{
+  cognome: "FEHIL",
+  nome: "SAMAR KHAMIS RAMADAN KHAMIS",
+  file: "/files/Samar.pdf"
+},
+{
+  cognome: "FEHIL",
+  nome: "AHMED KHAMIS RAMADAN MOUSA KHAMIS",
+  file: "/files/Ahmed.pdf"
+}
 
 function pulisci(testo) {
   return testo
