@@ -1,8 +1,9 @@
 
 {
-  "name": "verifica-certificati",
+  "name": "certificati-plida",
   "version": "1.0.0",
   "private": true,
+  "description": "Portale per la verifica e il download dei certificati PLIDA",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
