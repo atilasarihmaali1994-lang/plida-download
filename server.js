@@ -1,13 +1,17 @@
 
 const express = require("express");
 const path = require("path");
+const fs = require("fs");
 const crypto = require("crypto");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
-app.use(express.static("public"));
+app.use(express.json({ limit: "10kb" }));
+app.use(express.static(path.join(__dirname, "public")));
+
+// I PDF devono essere nella cartella private/files
+const FILES_DIR = path.join(__dirname, "private", "files");
 
 const utenti = [
   {
@@ -97,15 +101,18 @@ const utenti = [
   }
 ];
 
+// Normalizzazione dei nomi
 function pulisci(testo) {
   return String(testo ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .trim()
     .toUpperCase()
-    .replace(/-/g, " ")
+    .replace(/[-']/g, " ")
     .replace(/\s+/g, " ");
 }
 
-// Token temporanei, conservati in memoria.
+// Token temporanei per il download
 const downloadTokens = new Map();
 
 app.post("/api/verifica", (req, res) => {
@@ -115,7 +122,7 @@ app.post("/api/verifica", (req, res) => {
   if (!cognome || !nome) {
     return res.status(400).json({
       ok: false,
-      message: "Inserire cognome e nome."
+      message: "Inserisci cognome e nome."
     });
   }
 
@@ -127,7 +134,18 @@ app.post("/api/verifica", (req, res) => {
   if (!utente) {
     return res.status(401).json({
       ok: false,
-      message: "Dati non validi."
+      message: "Cognome o nome non trovato."
+    });
+  }
+
+  const filePath = path.join(FILES_DIR, utente.file);
+
+  if (!fs.existsSync(filePath)) {
+    console.error("PDF mancante:", filePath);
+
+    return res.status(404).json({
+      ok: false,
+      message: "Certificato non disponibile sul server."
     });
   }
 
@@ -135,11 +153,12 @@ app.post("/api/verifica", (req, res) => {
 
   downloadTokens.set(token, {
     file: utente.file,
-    expiresAt: Date.now() + 5 * 60 * 1000
+    expiresAt: Date.now() + 10 * 60 * 1000
   });
 
   return res.json({
     ok: true,
+    message: "Certificato trovato.",
     downloadUrl: `/api/download/${token}`
   });
 });
@@ -149,41 +168,48 @@ app.get("/api/download/:token", (req, res) => {
   const sessione = downloadTokens.get(token);
 
   if (!sessione) {
-    return res.status(403).json({
-      ok: false,
-      message: "Link non valido."
-    });
+    return res.status(403).send("Link non valido.");
   }
 
   if (Date.now() > sessione.expiresAt) {
     downloadTokens.delete(token);
-
-    return res.status(403).json({
-      ok: false,
-      message: "Link scaduto."
-    });
+    return res.status(403).send("Link scaduto.");
   }
 
-  // Il token può essere utilizzato una sola volta.
+  const filePath = path.join(FILES_DIR, sessione.file);
+
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).send("PDF non trovato.");
+  }
+
+  // Impedisce il riutilizzo del link
   downloadTokens.delete(token);
 
-  const filePath = path.join(
-    __dirname,
-    "private",
-    "files",
-    sessione.file
-  );
+  res.download(filePath, sessione.file, err => {
+    if (err) {
+      console.error("Errore download:", err.message);
 
-  return res.download(filePath, sessione.file, err => {
-    if (err && !res.headersSent) {
-      res.status(404).json({
-        ok: false,
-        message: "Certificato non disponibile."
-      });
+      if (!res.headersSent) {
+        res.status(500).send("Errore durante il download.");
+      }
     }
   });
 });
 
+// Pagina principale
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
 app.listen(PORT, () => {
   console.log(`Server avviato sulla porta ${PORT}`);
+  console.log(`Cartella certificati: ${FILES_DIR}`);
+
+  for (const utente of utenti) {
+    const filePath = path.join(FILES_DIR, utente.file);
+
+    if (!fs.existsSync(filePath)) {
+      console.warn(`ATTENZIONE: file mancante: ${utente.file}`);
+    }
+  }
 });
