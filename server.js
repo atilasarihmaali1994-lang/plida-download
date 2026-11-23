@@ -10,9 +10,9 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json({ limit: "10kb" }));
 app.use(express.static(path.join(__dirname, "public")));
 
-// I PDF devono essere nella cartella private/files
 const FILES_DIR = path.join(__dirname, "private", "files");
 
+// Tutti i 17 certificati
 const utenti = [
   {
     cognome: "SLIMANI",
@@ -101,7 +101,7 @@ const utenti = [
   }
 ];
 
-// Normalizzazione dei nomi
+// Normalizza cognomi e nomi
 function pulisci(testo) {
   return String(testo ?? "")
     .normalize("NFD")
@@ -112,7 +112,7 @@ function pulisci(testo) {
     .replace(/\s+/g, " ");
 }
 
-// Token temporanei per il download
+// Token di download temporanei
 const downloadTokens = new Map();
 
 app.post("/api/verifica", (req, res) => {
@@ -134,14 +134,14 @@ app.post("/api/verifica", (req, res) => {
   if (!utente) {
     return res.status(401).json({
       ok: false,
-      message: "Cognome o nome non trovato."
+      message: "Cognome o nome non valido."
     });
   }
 
   const filePath = path.join(FILES_DIR, utente.file);
 
   if (!fs.existsSync(filePath)) {
-    console.error("PDF mancante:", filePath);
+    console.error("Certificato mancante:", filePath);
 
     return res.status(404).json({
       ok: false,
@@ -163,6 +163,7 @@ app.post("/api/verifica", (req, res) => {
   });
 });
 
+// Scarica il certificato
 app.get("/api/download/:token", (req, res) => {
   const token = req.params.token;
   const sessione = downloadTokens.get(token);
@@ -182,7 +183,6 @@ app.get("/api/download/:token", (req, res) => {
     return res.status(404).send("PDF non trovato.");
   }
 
-  // Impedisce il riutilizzo del link
   downloadTokens.delete(token);
 
   res.download(filePath, sessione.file, err => {
@@ -190,26 +190,30 @@ app.get("/api/download/:token", (req, res) => {
       console.error("Errore download:", err.message);
 
       if (!res.headersSent) {
-        res.status(500).send("Errore durante il download.");
+        res.status(500).send(
+          "Errore durante il download del certificato."
+        );
       }
     }
   });
 });
 
-// Pagina principale
+// Home
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+// Avvio
 app.listen(PORT, () => {
   console.log(`Server avviato sulla porta ${PORT}`);
-  console.log(`Cartella certificati: ${FILES_DIR}`);
+  console.log(`Certificati configurati: ${utenti.length}`);
+  console.log(`Cartella PDF: ${FILES_DIR}`);
 
-  for (const utente of utenti) {
-    const filePath = path.join(FILES_DIR, utente.file);
+  utenti.forEach(u => {
+    const filePath = path.join(FILES_DIR, u.file);
 
     if (!fs.existsSync(filePath)) {
-      console.warn(`ATTENZIONE: file mancante: ${utente.file}`);
+      console.warn(`FILE MANCANTE: ${u.file}`);
     }
-  }
+  });
 });
