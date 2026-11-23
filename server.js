@@ -8,13 +8,25 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const PUBLIC_DIR = path.join(__dirname, "public");
-const FILES_DIR = path.join(__dirname, "private", "files");
+
+// Percorso attuale dei PDF su GitHub
+const FILES_DIR = PUBLIC_DIR;
 
 app.disable("x-powered-by");
 app.use(express.json({ limit: "10kb" }));
+
+// Impedisce l'accesso diretto ai PDF tramite URL.
+// Va eseguito prima di express.static().
+app.use((req, res, next) => {
+  if (/\.pdf$/i.test(req.path)) {
+    return res.status(404).send("File non disponibile.");
+  }
+  next();
+});
+
 app.use(express.static(PUBLIC_DIR));
 
-// Elenco completo dei 17 certificati
+// Elenco dei 17 certificati
 const utenti = [
   { cognome: "SLIMANI", nome: "ABDELHAK", file: "SLIMANI ABDELHAK.pdf" },
   { cognome: "RCHOUK", nome: "YOUSSEF", file: "RCHOUK YOUSSEF (1).pdf" },
@@ -35,7 +47,6 @@ const utenti = [
   { cognome: "AARAB", nome: "HALIMA", file: "AARAB HALIMA.pdf" }
 ];
 
-// Normalizzazione cognome e nome
 function pulisci(testo) {
   return String(testo ?? "")
     .normalize("NFD")
@@ -46,23 +57,10 @@ function pulisci(testo) {
     .replace(/\s+/g, " ");
 }
 
-// Token temporanei
 const downloadTokens = new Map();
-
 const TOKEN_DURATION = 10 * 60 * 1000;
 
-// Pulizia periodica dei token scaduti
-setInterval(() => {
-  const now = Date.now();
-
-  for (const [token, sessione] of downloadTokens) {
-    if (sessione.expiresAt <= now) {
-      downloadTokens.delete(token);
-    }
-  }
-}, 60 * 1000).unref();
-
-// Verifica disponibilità del PDF
+// Verifica esistenza PDF
 async function verificaFile(nomeFile) {
   const filePath = path.join(FILES_DIR, nomeFile);
 
@@ -74,7 +72,7 @@ async function verificaFile(nomeFile) {
   }
 }
 
-// API verifica certificato
+// Ricerca certificato
 app.post("/api/verifica", async (req, res) => {
   try {
     const cognome = pulisci(req.body?.cognome);
@@ -102,9 +100,7 @@ app.post("/api/verifica", async (req, res) => {
     const filePath = await verificaFile(utente.file);
 
     if (!filePath) {
-      console.error(
-        `[ERRORE] Certificato mancante: ${utente.file}`
-      );
+      console.error("PDF mancante:", utente.file);
 
       return res.status(404).json({
         ok: false,
@@ -135,63 +131,36 @@ app.post("/api/verifica", async (req, res) => {
   }
 });
 
-// API download certificato
+// Download certificato
 app.get("/api/download/:token", async (req, res) => {
-  try {
-    const token = req.params.token;
-    const sessione = downloadTokens.get(token);
+  const token = req.params.token;
+  const sessione = downloadTokens.get(token);
 
-    if (!sessione) {
-      return res.status(403).json({
-        ok: false,
-        message: "Link non valido o già utilizzato."
-      });
-    }
-
-    if (Date.now() >= sessione.expiresAt) {
-      downloadTokens.delete(token);
-
-      return res.status(403).json({
-        ok: false,
-        message: "Link scaduto. Effettua una nuova ricerca."
-      });
-    }
-
-    const filePath = await verificaFile(sessione.file);
-
-    if (!filePath) {
-      return res.status(404).json({
-        ok: false,
-        message: "File PDF non trovato."
-      });
-    }
-
-    // Il token è utilizzabile una sola volta
+  if (!sessione || Date.now() >= sessione.expiresAt) {
     downloadTokens.delete(token);
 
-    return res.download(filePath, sessione.file, error => {
-      if (error) {
-        console.error("Errore download:", error);
-
-        if (!res.headersSent) {
-          res.status(500).json({
-            ok: false,
-            message: "Errore durante il download."
-          });
-        }
-      }
-    });
-
-  } catch (error) {
-    console.error("Errore API download:", error);
-
-    if (!res.headersSent) {
-      return res.status(500).json({
-        ok: false,
-        message: "Errore interno del server."
-      });
-    }
+    return res.status(403).send(
+      "Link non valido o scaduto. Effettua una nuova ricerca."
+    );
   }
+
+  const filePath = await verificaFile(sessione.file);
+
+  if (!filePath) {
+    return res.status(404).send("PDF non trovato.");
+  }
+
+  downloadTokens.delete(token);
+
+  res.download(filePath, sessione.file, error => {
+    if (error) {
+      console.error("Errore download:", error.message);
+
+      if (!res.headersSent) {
+        res.status(500).send("Errore durante il download.");
+      }
+    }
+  });
 });
 
 // Pagina principale
@@ -199,7 +168,7 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "index.html"));
 });
 
-// Endpoint per verificare che il server sia attivo
+// Controllo server
 app.get("/api/health", (req, res) => {
   res.json({
     ok: true,
@@ -207,20 +176,23 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// Gestione API inesistenti
-app.use("/api", (req, res) => {
-  res.status(404).json({
-    ok: false,
-    message: "Endpoint non trovato."
-  });
-});
+// Pulizia token scaduti
+setInterval(() => {
+  const now = Date.now();
 
-// Avvio server
+  for (const [token, sessione] of downloadTokens) {
+    if (sessione.expiresAt <= now) {
+      downloadTokens.delete(token);
+    }
+  }
+}, 60000).unref();
+
+// Avvio
 app.listen(PORT, async () => {
   console.log("--------------------------------");
   console.log("PORTALE CERTIFICATI PLIDA");
   console.log("--------------------------------");
-  console.log(`Server attivo sulla porta ${PORT}`);
+  console.log(`Porta: ${PORT}`);
   console.log(`Certificati configurati: ${utenti.length}`);
   console.log(`Cartella PDF: ${FILES_DIR}`);
 
@@ -235,7 +207,7 @@ app.listen(PORT, async () => {
       console.log(`[OK] ${utente.file}`);
     } else {
       mancanti++;
-      console.error(`[MANCANTE] ${utente.file}`);
+      console.log(`[MANCANTE] ${utente.file}`);
     }
   }
 
